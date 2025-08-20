@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game Burung Simpel</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const birdImg = new Image();
+    birdImg.src = "logo.png"; // logo burung yang kamu upload
+
+    let bird = { x: 50, y: 150, width: 40, height: 40, gravity: 0.5, lift: -8, velocity: 0 };
+
+    let pipes = [];
+    let frame = 0;
+    let score = 0;
+
+    function drawBird() {
+      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+    }
+
+    function drawPipes() {
+      ctx.fillStyle = "green";
+      for (let i = 0; i < pipes.length; i++) {
+        let p = pipes[i];
+        ctx.fillRect(p.x, 0, p.width, p.top);
+        ctx.fillRect(p.x, canvas.height - p.bottom, p.width, p.bottom);
+      }
+    }
+
+    function updatePipes() {
+      if (frame % 100 === 0) {
+        let gap = 120;
+        let top = Math.random() * (canvas.height - gap - 100) + 50;
+        let bottom = canvas.height - (top + gap);
+        pipes.push({ x: canvas.width, width: 40, top: top, bottom: bottom });
+      }
+      for (let i = 0; i < pipes.length; i++) {
+        pipes[i].x -= 2;
+
+        // tabrakan
+        if (
+          bird.x < pipes[i].x + pipes[i].width &&
+          bird.x + bird.width > pipes[i].x &&
+          (bird.y < pipes[i].top || bird.y + bird.height > canvas.height - pipes[i].bottom)
+        ) {
+          resetGame();
+        }
+
+        if (pipes[i].x + pipes[i].width === bird.x) {
+          score++;
+        }
+      }
+
+      if (pipes.length && pipes[0].x < -pipes[0].width) {
+        pipes.shift();
+      }
+    }
+
+    function resetGame() {
+      bird.y = 150;
+      bird.velocity = 0;
+      pipes = [];
+      score = 0;
+      frame = 0;
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "white";
+      ctx.font = "24px Arial";
+      ctx.fillText("Score: " + score, 10, 30);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // burung
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+      if (bird.y + bird.height > canvas.height || bird.y < 0) {
+        resetGame();
+      }
+
+      drawBird();
+
+      // pipa
+      updatePipes();
+      drawPipes();
+
+      // skor
+      drawScore();
+
+      frame++;
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener("keydown", () => {
+      bird.velocity = bird.lift;
+    });
+    document.addEventListener("click", () => {
+      bird.velocity = bird.lift;
+    });
+
+    birdImg.onload = () => {
+      update();
+    };
+  </script>
+</body>
+</html>
